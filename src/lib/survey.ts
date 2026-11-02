@@ -7,11 +7,8 @@ const text = z.string().trim().max(MAX_TEXT).optional().default("");
 
 export const submissionSchema = z
   .object({
-    name: z
-      .string({ required_error: "Please enter your name." })
-      .trim()
-      .min(2, "Please enter your name.")
-      .max(80, "Please use 80 characters or fewer."),
+    name: z.string().trim().max(80, "Please use 80 characters or fewer.").optional().default(""),
+    anonymous: z.boolean().optional().default(false),
     role: z.enum(roles, { errorMap: () => ({ message: "Please select your role." }) }),
     answers: z.record(z.string(), z.string().max(MAX_TEXT)),
     explanations: z.record(z.string(), text).optional().default({}),
@@ -19,6 +16,9 @@ export const submissionSchema = z
     startedAt: z.number().int(),
   })
   .superRefine((data, ctx) => {
+    if (!data.anonymous && data.name.length < 2) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["name"], message: "Please enter your name." });
+    }
     for (const q of questions) {
       if (q.managersOnly && data.role !== "Manager") continue;
       if (q.kind !== "choice") continue;
@@ -40,9 +40,15 @@ export const sheetColumns = [
   ...questions.flatMap((q) => ((q as ChoiceQuestion).explainOption ? [q.column, `${q.column} (explanation)`] : [q.column])),
 ];
 
+export const ANONYMOUS_NAME = "Anonymous";
+
+export function displayName(data: Pick<Submission, "name" | "anonymous">) {
+  return data.anonymous ? ANONYMOUS_NAME : data.name.replace(/\s+/g, " ");
+}
+
 /** Flattens a validated submission into values ordered like `sheetColumns` (minus Timestamp / Submission ID). */
 export function toSheetValues(data: Submission) {
-  const row: Record<string, string> = { Name: data.name.replace(/\s+/g, " "), Role: data.role };
+  const row: Record<string, string> = { Name: displayName(data), Role: data.role };
   for (const q of questions) {
     const applies = !q.managersOnly || data.role === "Manager";
     row[q.column] = applies ? (data.answers[q.id] ?? "").trim() : "N/A";

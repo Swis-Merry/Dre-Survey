@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sheetColumns, submissionSchema, toSheetValues } from "@/lib/survey";
+import { displayName, sheetColumns, submissionSchema, toSheetValues } from "@/lib/survey";
 
 export const runtime = "nodejs";
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ secret, id, name: data.name.replace(/\s+/g, " "), headers: sheetColumns, values: toSheetValues(data) }),
+      body: JSON.stringify({ secret, id, name: displayName(data), headers: sheetColumns, values: toSheetValues(data) }),
       redirect: "follow",
       cache: "no-store",
     });

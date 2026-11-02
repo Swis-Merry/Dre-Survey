@@ -11,6 +11,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 export function SurveyForm() {
   const [name, setName] = useState("");
+  const [anonymous, setAnonymous] = useState(false);
   const [role, setRole] = useState<Role | "">("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [explanations, setExplanations] = useState<Record<string, string>>({});
@@ -26,7 +27,7 @@ export function SurveyForm() {
 
   const shown = visibleQuestions(role);
   const total = shown.length + 2;
-  const answered = (name.trim() ? 1 : 0) + (role ? 1 : 0) + shown.filter((q) => (answers[q.id] ?? "").trim()).length;
+  const answered = (anonymous || name.trim() ? 1 : 0) + (role ? 1 : 0) + shown.filter((q) => (answers[q.id] ?? "").trim()).length;
   const progress = Math.round((answered / total) * 100);
 
   function setAnswer(id: string, value: string) {
@@ -50,7 +51,7 @@ export function SurveyForm() {
 
   function validate() {
     const next: Record<string, string> = {};
-    if (name.trim().length < 2) next.name = "Please enter your name.";
+    if (!anonymous && name.trim().length < 2) next.name = "Please enter your name.";
     if (!role) next.role = "Please select your role.";
     for (const q of shown) {
       if (q.kind === "choice" && !answers[q.id]) next[q.id] = "Please choose an option.";
@@ -72,7 +73,8 @@ export function SurveyForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
+          name: anonymous ? "" : name.trim(),
+          anonymous,
           role,
           answers: Object.fromEntries(shown.map((q) => [q.id, answers[q.id] ?? ""])),
           explanations,
@@ -153,14 +155,17 @@ export function SurveyForm() {
                 <label htmlFor="respondent-name" className="block font-serif text-2xl leading-snug sm:text-[1.7rem]">
                   Before we begin &mdash; what is your name?
                 </label>
-                <p className="mt-2 text-sm text-charcoal/55">Please use your full name so the Portals team can follow up with you.</p>
+                <p className="mt-2 text-sm text-charcoal/55">
+                  Please use your full name so the Portals team can follow up with you, or tick the box below to stay anonymous.
+                </p>
                 <input
                   id="respondent-name"
                   type="text"
                   name="name"
                   autoComplete="name"
                   maxLength={80}
-                  value={name}
+                  value={anonymous ? "" : name}
+                  disabled={anonymous}
                   onChange={(e) => {
                     setName(e.target.value);
                     setErrors((current) => {
@@ -170,10 +175,28 @@ export function SurveyForm() {
                       return next;
                     });
                   }}
-                  placeholder="e.g. Sara Ahmed"
+                  placeholder={anonymous ? "Submitting as Anonymous" : "e.g. Sara Ahmed"}
                   aria-invalid={Boolean(errors.name)}
-                  className="mt-6 block w-full border border-charcoal/15 bg-white/70 px-4 py-3 text-base outline-none transition-colors placeholder:text-charcoal/35 focus:border-champagne-dark focus-visible:outline-none"
+                  className="mt-6 block w-full border border-charcoal/15 bg-white/70 px-4 py-3 text-base outline-none transition-colors placeholder:text-charcoal/35 focus:border-champagne-dark focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-sand/60"
                 />
+                <label className="mt-4 inline-flex cursor-pointer items-center gap-3 text-sm text-charcoal/75 select-none">
+                  <input
+                    type="checkbox"
+                    name="anonymous"
+                    checked={anonymous}
+                    onChange={(e) => {
+                      setAnonymous(e.target.checked);
+                      setErrors((current) => {
+                        if (!current.name) return current;
+                        const next = { ...current };
+                        delete next.name;
+                        return next;
+                      });
+                    }}
+                    className="h-4 w-4 cursor-pointer accent-champagne-dark"
+                  />
+                  Submit anonymously &mdash; my name won&rsquo;t be recorded
+                </label>
               </QuestionCard>
 
               <QuestionCard id="role" number="" error={errors.role}>
