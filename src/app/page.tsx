@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { SurveyForm } from "@/components/SurveyForm";
 import { Reveal } from "@/components/Reveal";
 import { questions, survey } from "@/content/survey";
@@ -10,8 +11,8 @@ export default function Home() {
     <>
       <header className="fixed inset-x-0 top-0 z-40 border-b border-charcoal/5 bg-ivory/90 backdrop-blur">
         <div className="container-luxe flex h-[4.5rem] items-center justify-between sm:h-20">
-          <a href="#top" className="font-serif text-2xl text-charcoal sm:text-[1.7rem]">
-            DRE <span className="italic text-champagne-dark">Homes</span>
+          <a href="#top" aria-label="DRE Homes" className="block">
+            <Image src="/brand/dre-logo-black.png" alt="DRE Homes" width={1200} height={498} priority className="h-9 w-auto sm:h-11" />
           </a>
           <a
             href="#survey"
@@ -97,9 +98,7 @@ export default function Home() {
 
       <footer className="bg-[#1b1b1b] py-12 text-ivory/70">
         <div className="container-luxe flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
-          <p className="font-serif text-2xl text-ivory">
-            DRE <span className="italic text-gold-soft">Homes</span>
-          </p>
+          <Image src="/brand/dre-logo-white.png" alt="DRE Homes" width={1200} height={498} className="h-10 w-auto" />
           <p className="text-xs tracking-wide">&copy; {new Date().getFullYear()} DRE Homes Real Estate &middot; Portals Team</p>
         </div>
       </footer>
