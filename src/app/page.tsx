@@ -66,7 +66,7 @@ export default function Home() {
                   {[
                     { value: String(agentQuestions), label: "Short questions" },
                     { value: `${minutes} min`, label: "To complete" },
-                    { value: "100%", label: "Anonymous" },
+                    { value: "100%", label: "Confidential" },
                   ].map((s, i) => (
                     <div key={s.label} className="w-full">
                       {i > 0 && <span aria-hidden className="mx-auto mb-8 block h-px w-12 bg-gold/60" />}

@@ -10,6 +10,7 @@ type Status = "idle" | "submitting" | "success" | "error";
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export function SurveyForm() {
+  const [name, setName] = useState("");
   const [role, setRole] = useState<Role | "">("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [explanations, setExplanations] = useState<Record<string, string>>({});
@@ -24,8 +25,8 @@ export function SurveyForm() {
   }, []);
 
   const shown = visibleQuestions(role);
-  const total = shown.length + 1;
-  const answered = (role ? 1 : 0) + shown.filter((q) => (answers[q.id] ?? "").trim()).length;
+  const total = shown.length + 2;
+  const answered = (name.trim() ? 1 : 0) + (role ? 1 : 0) + shown.filter((q) => (answers[q.id] ?? "").trim()).length;
   const progress = Math.round((answered / total) * 100);
 
   function setAnswer(id: string, value: string) {
@@ -49,6 +50,7 @@ export function SurveyForm() {
 
   function validate() {
     const next: Record<string, string> = {};
+    if (name.trim().length < 2) next.name = "Please enter your name.";
     if (!role) next.role = "Please select your role.";
     for (const q of shown) {
       if (q.kind === "choice" && !answers[q.id]) next[q.id] = "Please choose an option.";
@@ -70,6 +72,7 @@ export function SurveyForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: name.trim(),
           role,
           answers: Object.fromEntries(shown.map((q) => [q.id, answers[q.id] ?? ""])),
           explanations,
@@ -146,12 +149,36 @@ export function SurveyForm() {
             </div>
 
             <ol className="space-y-6">
-              <QuestionCard id="role" number="00" error={errors.role}>
+              <QuestionCard id="name" number="00" error={errors.name}>
+                <label htmlFor="respondent-name" className="block font-serif text-2xl leading-snug sm:text-[1.7rem]">
+                  Before we begin &mdash; what is your name?
+                </label>
+                <p className="mt-2 text-sm text-charcoal/55">Please use your full name so the Portals team can follow up with you.</p>
+                <input
+                  id="respondent-name"
+                  type="text"
+                  name="name"
+                  autoComplete="name"
+                  maxLength={80}
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setErrors((current) => {
+                      if (!current.name) return current;
+                      const next = { ...current };
+                      delete next.name;
+                      return next;
+                    });
+                  }}
+                  placeholder="e.g. Sara Ahmed"
+                  aria-invalid={Boolean(errors.name)}
+                  className="mt-6 block w-full border border-charcoal/15 bg-white/70 px-4 py-3 text-base outline-none transition-colors placeholder:text-charcoal/35 focus:border-champagne-dark focus-visible:outline-none"
+                />
+              </QuestionCard>
+
+              <QuestionCard id="role" number="" error={errors.role}>
                 <fieldset>
-                  <legend className="font-serif text-2xl leading-snug sm:text-[1.7rem]">
-                    Before we begin &mdash; which best describes you?
-                  </legend>
-                  <p className="mt-2 text-sm text-charcoal/55">Your response is anonymous. We only ask for your role.</p>
+                  <legend className="font-serif text-2xl leading-snug sm:text-[1.7rem]">Which best describes you?</legend>
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     {roles.map((r) => (
                       <Option key={r} name="role" value={r} checked={role === r} onChange={() => setRoleAnswer(r)} />
@@ -212,7 +239,7 @@ export function SurveyForm() {
                   &rarr;
                 </span>
               </button>
-              <p className="text-xs tracking-wide text-charcoal/50">Responses are anonymous and shared only with the Portals team.</p>
+              <p className="text-xs tracking-wide text-charcoal/50">Responses are confidential and shared only with the Portals team.</p>
             </div>
           </motion.form>
         )}

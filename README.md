@@ -1,6 +1,6 @@
 # DRE Homes — Portals Feedback Survey
 
-Anonymous feedback survey for DRE Homes agents and managers about the Portals team. Answers are appended to a Google Sheet.
+Feedback survey for DRE Homes agents and managers about the Portals team. Answers are appended to a Google Sheet.
 Styled with the Qurat Ul Ain site theme (ivory / sand / champagne / gold / charcoal, Cormorant Garamond + Manrope).
 
 **Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Motion · Zod · Google Apps Script

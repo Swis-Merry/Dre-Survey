@@ -7,6 +7,11 @@ const text = z.string().trim().max(MAX_TEXT).optional().default("");
 
 export const submissionSchema = z
   .object({
+    name: z
+      .string({ required_error: "Please enter your name." })
+      .trim()
+      .min(2, "Please enter your name.")
+      .max(80, "Please use 80 characters or fewer."),
     role: z.enum(roles, { errorMap: () => ({ message: "Please select your role." }) }),
     answers: z.record(z.string(), z.string().max(MAX_TEXT)),
     explanations: z.record(z.string(), text).optional().default({}),
@@ -30,13 +35,14 @@ export type Submission = z.output<typeof submissionSchema>;
 export const sheetColumns = [
   "Timestamp",
   "Submission ID",
+  "Name",
   "Role",
   ...questions.flatMap((q) => ((q as ChoiceQuestion).explainOption ? [q.column, `${q.column} (explanation)`] : [q.column])),
 ];
 
 /** Flattens a validated submission into values ordered like `sheetColumns` (minus Timestamp / Submission ID). */
 export function toSheetValues(data: Submission) {
-  const row: Record<string, string> = { Role: data.role };
+  const row: Record<string, string> = { Name: data.name.replace(/\s+/g, " "), Role: data.role };
   for (const q of questions) {
     const applies = !q.managersOnly || data.role === "Manager";
     row[q.column] = applies ? (data.answers[q.id] ?? "").trim() : "N/A";
